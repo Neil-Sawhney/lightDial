@@ -5,6 +5,7 @@
 #include <ESP8266WiFiMulti.h>
 #include <Servo.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -274,13 +275,16 @@ void apiCheck() {
           }
           tempdata[n] = stuffBuff.toInt();
 
-          int data[n];
+          vector<int> data;
+          auto iter = data.begin();
           for(int i=0; i<=n; i++){
-            data[i] = tempdata[i];
+             *iter = tempdata[i];
+             advance(iter,1);
           }
 
           // end of parse   
-          performRequest(data);
+          //performRequest(data);
+          addToVoicemail(data);
           delay(5000);
 
           val = map(analogRead(pot), 238, 847, 0, 180);
@@ -302,15 +306,15 @@ void apiCheck() {
 struct voicemailEntity {
 };
 
-void addToVoicemail(int data[]){
+void addToVoicemail(vector<int> data){
 
 }
 
-void performRequest(int data[]) {
+void performRequest(vector<int> data) {
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
-  for (int i = 0; i < sizeof(data); ++i) {
+  for (int i = 0; i < data.size(); ++i) {
     main1.write(data[i]);
     Serial.println(data[i]);
     delay(500);
