@@ -204,6 +204,27 @@ void blinkLED() {
   ledOff();
 }
 
+// blinks yellow twice
+void voicemailBlink() {
+  Serial.println("blink Led");
+  for (int i = 0; i < 2; i++) {
+    red = 255;
+    green = 200;
+    blue = 0;
+    analogWrite(redPin, red);
+    analogWrite(greenPin, green);
+    analogWrite(bluePin, blue);
+    delay(200);
+    red = 0;
+    green = 0;
+    blue = 0;
+    analogWrite(redPin, red);
+    analogWrite(greenPin, green);
+    analogWrite(bluePin, blue);
+    delay(200);
+  }
+}
+
 void ledOff() {
   Serial.println("Led Off");
   red = 0;
@@ -234,7 +255,32 @@ void apiCheck() {
       String Data = root_0["data"];
       if (Status) {
         for (int i = 0; i < 3; i++) {
-          performRequest(Data);
+
+          // parse
+          Serial.println("performRequest");
+          ledOff();
+          int tempdata[100];
+          int n = 0;
+          String stuffBuff = "";
+
+          for (int i = 1; i <= Data.length() - 2; i++) {
+            if (Data[i] == ',') {
+              tempdata[n] = stuffBuff.toInt();
+              stuffBuff = "";
+              n++;
+            } else {
+              stuffBuff += Data[i];
+            }
+          }
+          tempdata[n] = stuffBuff.toInt();
+
+          int data[n];
+          for(int i=0; i<=n; i++){
+            data[i] = tempdata[i];
+          }
+
+          // end of parse   
+          performRequest(data);
           delay(5000);
 
           val = map(analogRead(pot), 238, 847, 0, 180);
@@ -253,29 +299,18 @@ void apiCheck() {
   }
 }
 
-void performRequest(String strData) {
-  // parse
-  Serial.println("performRequest");
-  ledOff();
-  int data[100];
-  int n = 0;
-  String stuffBuff = "";
+struct voicemailEntity {
+};
 
-  for (int i = 1; i <= strData.length() - 2; i++) {
-    if (strData[i] == ',') {
-      data[n] = stuffBuff.toInt();
-      stuffBuff = "";
-      n++;
-    } else {
-      stuffBuff += strData[i];
-    }
-  }
-  data[n] = stuffBuff.toInt();
-  // end of parse
+void addToVoicemail(int data[]){
+
+}
+
+void performRequest(int data[]) {
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
-  for (int i = 0; i <= n; ++i) {
+  for (int i = 0; i < sizeof(data); ++i) {
     main1.write(data[i]);
     Serial.println(data[i]);
     delay(500);
