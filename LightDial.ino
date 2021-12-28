@@ -4,8 +4,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <Servo.h>
+#include <list>
 #include <string>
 #include <vector>
+
 
 using namespace std;
 
@@ -31,6 +33,9 @@ const int bluePin = D7;
 int val;
 int message[100];
 int messageSize = 0;
+
+list<vector<int>> voicemailList;
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(pot, INPUT);
@@ -71,8 +76,8 @@ void loop() {
     else if (val > 180)
       val = 180;
 
-    //180 to the right, 0 to left, with wire going back
-    // if dial is not on send, record values, then send when it returns
+    // 180 to the right, 0 to left, with wire going back
+    //  if dial is not on send, record values, then send when it returns
     if (val < 170 && val > 0) {
       ledOff();
       messageSize = 0;
@@ -84,7 +89,11 @@ void loop() {
           val = 0;
         else if (val > 180)
           val = 180;
-
+        // if the thing is on slash, open voicemail
+        else if (val < (90 + 10) && val > (90 - 10)) {
+          performRequest();
+          goto breakall;
+        }
         if (val < 170 && val > 0) {
           message[messageSize] = val;
           blinkLED();
@@ -99,7 +108,11 @@ void loop() {
     }
   breakall:
     Serial.println(val);
-    fadeLED();
+    if (voicemailList.size() == 0) {
+      fadeLED();
+    } else {
+      voicemailBlink();
+    }
     delay(60);
   }
 
@@ -255,7 +268,7 @@ void apiCheck() {
       bool Status = root_0["status"];
       String Data = root_0["data"];
       if (Status) {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
 
           // parse
           Serial.println("performRequest");
@@ -277,14 +290,15 @@ void apiCheck() {
 
           vector<int> data;
           auto iter = data.begin();
-          for(int i=0; i<=n; i++){
-             *iter = tempdata[i];
-             advance(iter,1);
+          for (int i = 0; i <= n; i++) {
+            *iter = tempdata[i];
+            advance(iter, 1);
           }
 
-          // end of parse   
-          //performRequest(data);
-          addToVoicemail(data);
+          // end of parse
+
+          voicemailList.push_back(data); // add to voicemail list
+          postCompletion();
           delay(5000);
 
           val = map(analogRead(pot), 238, 847, 0, 180);
@@ -295,6 +309,7 @@ void apiCheck() {
 
           if (val == 0) {
             break;
+            voicemailList.pop_front();
           }
         }
       }
@@ -303,14 +318,8 @@ void apiCheck() {
   }
 }
 
-struct voicemailEntity {
-};
-
-void addToVoicemail(vector<int> data){
-
-}
-
-void performRequest(vector<int> data) {
+void performRequest() {
+  vector<int> data = voicemailList.front();
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
@@ -321,12 +330,10 @@ void performRequest(vector<int> data) {
     blinkLED();
     delay(1000);
   }
-  //180 degrees is the right! If the wire is to the back.
+  // 180 degrees is the right! If the wire is to the back.
   main1.write(180);
   delay(1500);
   digitalWrite(servoToggle, LOW); // disable Servo
-
-  postCompletion();
 }
 
 void postCompletion() {
