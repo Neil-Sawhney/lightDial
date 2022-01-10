@@ -1,3 +1,4 @@
+#line 1 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
@@ -11,11 +12,13 @@ using namespace std;
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 
-#define MySSID "Fios-DGbZ5"
-#define MyWifiPassword "silt769wry62opt"
+#define MySSID "Fios-DGbZ5" // TODO: Change to your Wifi network SSID
+#define MyWifiPassword                                                         \
+  "silt769wry62opt" // TODO: Change to your Wifi network password
 
-String thisId = "6018896b3474e51208a11f4a";
-String thatId = "601889a22a90dd1295c80127";
+//#define MySSID "Fios-DGbZ5" // TODO: Change to your Wifi network SSID
+//#define MyWifiPassword "silt769wry62opt" // TODO: Change to your Wifi network
+//password
 
 Servo main1;
 
@@ -30,6 +33,25 @@ const int bluePin = D7;
 int val;
 int message[100];
 int messageSize = 0;
+#line 35 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void setup();
+#line 64 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void loop();
+#line 116 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void fadeLED();
+#line 174 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void blinkLED();
+#line 208 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void ledOff();
+#line 218 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void apiCheck();
+#line 256 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void performRequest(String strData);
+#line 292 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+void postCompletion();
+#line 304 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+String postInstructions(int arr[], int arraySize);
+#line 35 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void setup() {
   // put your setup code here, to run once:
   pinMode(pot, INPUT);
@@ -61,7 +83,7 @@ void setup() {
 
 void loop() {
 
-  // check api every 6 seconds
+  // print values for 6 seconds
   for (int i = 0; i < 100; i++) {
 
     val = map(analogRead(pot), 238, 847, 0, 180);
@@ -70,13 +92,12 @@ void loop() {
     else if (val > 180)
       val = 180;
 
-    //180 to the right, 0 to left, with wire going back
     // if dial is not on send, record values, then send when it returns
     if (val < 170 && val > 0) {
       ledOff();
       messageSize = 0;
       while (val < 170 && val > 0) {
-        delay(1000); // time between blinks
+        delay(1500); // time between blinks
 
         val = map(analogRead(pot), 238, 847, 0, 180);
         if (val < 0)
@@ -218,8 +239,7 @@ void apiCheck() {
   Serial.println("apiCheck");
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http; // Object of class HTTPClient
-    String url = "http://api.neil-sawhney.com/dials/" + thisId;
-    http.begin(client, url);
+    http.begin(client, "http://api.neil-sawhney.com/dials/601889a22a90dd1295c80127");
     int httpCode = http.GET();
     // Check the returning code
     if (httpCode > 0) {
@@ -282,7 +302,6 @@ void performRequest(String strData) {
     blinkLED();
     delay(1000);
   }
-  //180 degrees is the right! If the wire is to the back.
   main1.write(180);
   delay(1500);
   digitalWrite(servoToggle, LOW); // disable Servo
@@ -296,8 +315,8 @@ void postCompletion() {
     HTTPClient http; // Object of class HTTPClient
     http.begin(client, "http://api.neil-sawhney.com/dials");
     http.addHeader("Content-Type", "application/json");
-    int httpCode =
-        http.POST("{\"_id\":\"" + thisId + "\",\"status\":\"false\"}");
+    int httpCode = http.POST(
+        "{\"_id\":\"601889a22a90dd1295c80127\",\"status\":\"false\"}");
     http.end(); // Close connection
   }
 }
@@ -319,9 +338,10 @@ String postInstructions(int arr[], int arraySize) {
     HTTPClient http; // Object of class HTTPClient
     http.begin(client, "http://api.neil-sawhney.com/dials");
     http.addHeader("Content-Type", "application/json");
-    int httpCode =
-        http.POST("{\"_id\":\"" + thatId +
-                  "\",\"status\":\"true\",\"data\":" + stuffBuff + "}");
+    int httpCode = http.POST(
+        "{\"_id\":\"6018896b3474e51208a11f4a\",\"status\":\"true\",\"data\":" +
+        stuffBuff + "}");
     http.end(); // Close connection
   }
 }
+
