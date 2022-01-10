@@ -17,8 +17,8 @@ WiFiClient client;
 #define MySSID "Fios-DGbZ5" //CHANGE TO UR WIFIS
 #define MyWifiPassword "silt769wry62opt" //CHANGE TO UR PASSWORDS
 
-String thisId = "6018896b3474e51208a11f4a"; //SWAP THIS WITH THAT
-String thatId = "601889a22a90dd1295c80127"; //SWAP THAT WITH THIS
+String thatId = "6018896b3474e51208a11f4a"; //SWAP THIS WITH THAT
+String thisId = "601889a22a90dd1295c80127"; //SWAP THAT WITH THIS
 
 Servo main1;
 
