@@ -13,12 +13,9 @@ ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 
 #define MySSID "Fios-DGbZ5" // TODO: Change to your Wifi network SSID
-#define MyWifiPassword                                                         \
-  "silt769wry62opt" // TODO: Change to your Wifi network password
+#define MyWifiPassword "silt769wry62opt" // TODO: Change to your Wifi network password
 
-//#define MySSID "Fios-DGbZ5" // TODO: Change to your Wifi network SSID
-//#define MyWifiPassword "silt769wry62opt" // TODO: Change to your Wifi network
-//password
+
 
 Servo main1;
 
@@ -33,25 +30,17 @@ const int bluePin = D7;
 int val;
 int message[100];
 int messageSize = 0;
-#line 35 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+
 void setup();
-#line 64 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void loop();
-#line 116 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void fadeLED();
-#line 174 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void blinkLED();
-#line 208 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void ledOff();
-#line 218 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void apiCheck();
-#line 256 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void performRequest(String strData);
-#line 292 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void postCompletion();
-#line 304 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
+
 String postInstructions(int arr[], int arraySize);
-#line 35 "c:\\Users\\neils\\OneDrive\\Documents\\Arduino\\LightDial2\\LightDial2.ino"
 void setup() {
   // put your setup code here, to run once:
   pinMode(pot, INPUT);
