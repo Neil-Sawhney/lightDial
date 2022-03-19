@@ -13,11 +13,14 @@ using namespace std;
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 
-#define MySSID "ARRIS-3AFD"           // CHANGE TO UR WIFIS
-#define MyWifiPassword "341626031186" // CHANGE TO UR PASSWORDS
+#define MySSID "92Y-Wifi"           // CHANGE TO UR WIFIS
+#define MyWifiPassword "" // CHANGE TO UR PASSWORDS
 
-String thatId = "6018896b3474e51208a11f4a"; // SWAP THIS WITH THAT
-String thisId = "601889a22a90dd1295c80127"; // SWAP THAT WITH THIS
+String julesDialID = "6018896b3474e51208a11f4a";
+String neilDialID = "601889a22a90dd1295c80127";
+
+String thisId = julesDialID; // SWAP THIS WITH THAT
+String thatId = neilDialID; // SWAP THAT WITH THIS
 
 Servo main1;
 
@@ -30,6 +33,7 @@ const int greenPin = D5;
 const int bluePin = D7;
 
 int val;
+int valLast;
 int message[100];
 int messageSize = 0;
 
@@ -74,50 +78,75 @@ void loop()
   for (int i = 0; i < 100; i++)
   {
 
+    valLast = val;
     val = map(analogRead(pot), 238, 847, 0, 180);
     if (val < 0)
       val = 0;
     else if (val > 180)
       val = 180;
 
+    Serial.println(val);
+
     // 180 to the right, 0 to left, with wire going back
     //  if dial is not on send, record values, then send when it returns
-    if (val < 170 && val > 0 && voicemailList.size() == 0)
+    if (val < 160 && val > 20 && voicemailList.size() == 0 && valLast < 160 && valLast > 20)
     {
-      ledOff();
-      messageSize = 0;
-      while (val < 170 && val > 0)
-      {
-        delay(1000); // time between blinks
+        Serial.println("send loop");
+        ledOff();
+        messageSize = 0;
+        while (val < 170 && val > 0)
+        {
+          delay(1000); // time between blinks
 
-        val = map(analogRead(pot), 238, 847, 0, 180);
-        if (val < 0)
-          val = 0;
-        else if (val > 180)
-          val = 180;
-        if (val < 170 && val > 0)
-        {
-          message[messageSize] = val;
-          blinkLED();
-          Serial.println(val);
-          messageSize++;
+          val = map(analogRead(pot), 238, 847, 0, 180);
+          if (val < 0)
+            val = 0;
+          else if (val > 180)
+            val = 180;
+          if (val < 170 && val > 0)
+          {
+            message[messageSize] = val;
+            blinkLED();
+            Serial.println(val);
+            messageSize++;
+          }
+          else if (val == 0)
+          {
+            goto breakall;
+          }
         }
-        else if (val == 0)
-        {
-          goto breakall;
-        }
-      }
-      postInstructions(message, messageSize);
+        postInstructions(message, messageSize);
     }
 
-    // if the thing is on slash, open voicemail
-    else if (val < 170 && val > 0 && voicemailList.size() != 0)
+    // if the thing is in the send range, open voicemail
+    // also IM GONNNA DOUBLE CHECK THIS SHIT BECAUSE SOMETIMES IT JUST PICKS UP A WEIRD ASS VALUE IF YOU GO THE OTHER WAY
+    else if (val < 160 && val > 0 && voicemailList.size() != 0 && valLast < 160 && valLast > 20)
     {
-      performRequest();
+        performRequest();
+    }
+
+    else if (val <= 0 && voicemailList.size() != 0)
+    {
+      Serial.println("voicemailList POP!");
+      voicemailList.pop_front();
+
+      // move the thing back
+      digitalWrite(servoToggle, HIGH); // enable Servo
+      main1.write(180);
+      delay(3000);
+      digitalWrite(servoToggle, LOW); // disable Servo
+    }
+
+    else if (val <= 0 && voicemailList.size() == 0)
+    {
+      // move the thing back
+      digitalWrite(servoToggle, HIGH); // enable Servo
+      main1.write(180);
+      delay(3000);
+      digitalWrite(servoToggle, LOW); // disable Servo
     }
 
   breakall:
-    Serial.println(val);
     if (voicemailList.size() == 0)
     {
       fadeLED();
@@ -253,17 +282,17 @@ void blinkLED()
   ledOff();
 }
 
-int voicemailPulseSpeed= 5;
+int voicemailPulseSpeed = 5;
 // pulse purple
 void voicemailPulse()
 {
   switch (voicemailStage)
   {
   case 0:
-    if (green < 100)
+    if (red < 100)
     {
-      green+= voicemailPulseSpeed;
-      blue= green*2.55;
+      red += voicemailPulseSpeed;
+      blue = red * 2.55;
     }
     else
     {
@@ -271,10 +300,11 @@ void voicemailPulse()
     }
     break;
   case 1:
-    if (green > 0)
+    if (red > 0)
     {
-      green-= voicemailPulseSpeed;;
-      blue = green*2.55;
+      red -= voicemailPulseSpeed;
+      ;
+      blue = red * 2.55;
     }
     else
     {
@@ -282,9 +312,9 @@ void voicemailPulse()
     }
     break;
   }
-    analogWrite(redPin, red);
-    analogWrite(greenPin, green);
-    analogWrite(bluePin, blue);
+  analogWrite(redPin, red);
+  analogWrite(greenPin, green);
+  analogWrite(bluePin, blue);
 }
 
 void ledOff()
@@ -367,11 +397,10 @@ void performRequest()
 {
   Serial.println("performRequest");
   list<int> data = voicemailList.front();
-  voicemailList.pop_front();
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
-  while(data.size() > 0)
+  while (data.size() > 0)
   {
     main1.write(data.front());
     Serial.println(data.front());
