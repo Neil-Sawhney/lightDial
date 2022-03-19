@@ -33,7 +33,7 @@ int val;
 int message[100];
 int messageSize = 0;
 
-list<vector<int>> voicemailList;
+list<list<int>> voicemailList;
 
 void setup()
 {
@@ -82,7 +82,7 @@ void loop()
 
     // 180 to the right, 0 to left, with wire going back
     //  if dial is not on send, record values, then send when it returns
-    if (val < 170 && val > 0 && !(val < (90 + 10) && val > (90 - 10)))
+    if (val < 170 && val > 0 && voicemailList.size() == 0)
     {
       ledOff();
       messageSize = 0;
@@ -107,12 +107,11 @@ void loop()
           goto breakall;
         }
       }
-      fadeLED();
       postInstructions(message, messageSize);
     }
 
     // if the thing is on slash, open voicemail
-    else if (val < (90 + 10) && val > (90 - 10))
+    else if (val < 170 && val > 0 && voicemailList.size() != 0)
     {
       performRequest();
     }
@@ -139,6 +138,7 @@ int green = 0;
 int blue = 0;
 
 int stage = 0;
+int voicemailStage = 0;
 
 void fadeLED()
 {
@@ -253,32 +253,38 @@ void blinkLED()
   ledOff();
 }
 
+int voicemailPulseSpeed= 5;
 // pulse purple
 void voicemailPulse()
 {
-  Serial.println("blink Led");
-  for (int i = 0; i < 100; i++)
+  switch (voicemailStage)
   {
-    red = i;
-    green = 0;
-    blue = i * 2.55;
+  case 0:
+    if (green < 100)
+    {
+      green+= voicemailPulseSpeed;
+      blue= green*2.55;
+    }
+    else
+    {
+      voicemailStage++;
+    }
+    break;
+  case 1:
+    if (green > 0)
+    {
+      green-= voicemailPulseSpeed;;
+      blue = green*2.55;
+    }
+    else
+    {
+      voicemailStage = 0;
+    }
+    break;
+  }
     analogWrite(redPin, red);
     analogWrite(greenPin, green);
     analogWrite(bluePin, blue);
-    delay(50);
-  }
-  for (int i = 100; i > 0; i--)
-  {
-    red = i;
-    green = 0;
-    blue = i * 2.55;
-    analogWrite(redPin, red);
-    analogWrite(greenPin, green);
-    analogWrite(bluePin, blue);
-    delay(50);
-  }
-  ledOff();
-  delay(1000);
 }
 
 void ledOff()
@@ -318,7 +324,7 @@ void apiCheck()
         // parse
         Serial.println("add data to voicemail");
         ledOff();
-        vector<int> data;
+        list<int> data;
         int n = 0;
         String stuffBuff = "";
 
@@ -359,15 +365,17 @@ void apiCheck()
 
 void performRequest()
 {
-  vector<int> data = voicemailList.front();
-  Serial.println(data.size());
+  Serial.println("performRequest");
+  list<int> data = voicemailList.front();
+  voicemailList.pop_front();
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
-  for (int i = 0; i < data.size(); ++i)
+  while(data.size() > 0)
   {
-    main1.write(data[i]);
-    Serial.println(data[i]);
+    main1.write(data.front());
+    Serial.println(data.front());
+    data.pop_front();
     delay(500);
     blinkLED();
     delay(1000);
