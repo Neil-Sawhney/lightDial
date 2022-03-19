@@ -14,8 +14,8 @@ using namespace std;
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 
-#define MySSID "Fios-DGbZ5" //CHANGE TO UR WIFIS
-#define MyWifiPassword "silt769wry62opt" //CHANGE TO UR PASSWORDS
+#define MySSID "ARRIS-3AFD" //CHANGE TO UR WIFIS
+#define MyWifiPassword "341626031186" //CHANGE TO UR PASSWORDS
 
 String thatId = "6018896b3474e51208a11f4a"; //SWAP THIS WITH THAT
 String thisId = "601889a22a90dd1295c80127"; //SWAP THAT WITH THIS
@@ -94,6 +94,7 @@ void loop() {
           performRequest();
           goto breakall;
         }
+        //!!! this needs to be changed to only work the first time
         if (val < 170 && val > 0) {
           message[messageSize] = val;
           blinkLED();
@@ -268,16 +269,15 @@ void apiCheck() {
       bool Status = root_0["status"];
       String Data = root_0["data"];
       if (Status) {
-        for (int i = 0; i < 2; i++) {
-
           // parse
-          Serial.println("performRequest");
+          Serial.println("add data to voicemail");
           ledOff();
-          int tempdata[100];
+          int tempdata[100] = {};
           int n = 0;
           String stuffBuff = "";
 
-          for (int i = 1; i <= Data.length() - 2; i++) {
+          //loops through the data and puts the numbers in to tempdata, skips the brackets
+          for (int i = 1; i < Data.length()-1; i++) {
             if (Data[i] == ',') {
               tempdata[n] = stuffBuff.toInt();
               stuffBuff = "";
@@ -289,29 +289,24 @@ void apiCheck() {
           tempdata[n] = stuffBuff.toInt();
 
           vector<int> data;
-          auto iter = data.begin();
-          for (int i = 0; i <= n; i++) {
-            *iter = tempdata[i];
-            advance(iter, 1);
+          for (int i = 0; i < Data.length() - 1; i++) {
+            data.push_back(tempdata[i]);
           }
+          Serial.println("3");
 
           // end of parse
 
           voicemailList.push_back(data); // add to voicemail list
           postCompletion();
           delay(5000);
+          Serial.println("4");
 
           val = map(analogRead(pot), 238, 847, 0, 180);
           if (val < 0)
             val = 0;
           else if (val > 180)
             val = 180;
-
-          if (val == 0) {
-            break;
-            voicemailList.pop_front();
-          }
-        }
+          Serial.println("5");
       }
     }
     http.end(); // Close connection
@@ -320,6 +315,7 @@ void apiCheck() {
 
 void performRequest() {
   vector<int> data = voicemailList.front();
+  Serial.println(data.size());
 
   digitalWrite(servoToggle, HIGH); // enable Servo
 
